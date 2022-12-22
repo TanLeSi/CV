@@ -1,17 +1,8 @@
-from textwrap import fill
 import pandas as pd
-from article import Article
+from functions.inbound.article import Article
 from string import ascii_uppercase
-import config_py
-import mysql.connector
-from sqlalchemy import create_engine
 import math
-rm_port = config_py.port
-rm_dbname = config_py.dbname
-rm_host = config_py.host
-rm_user = config_py.user
-rm_password = config_py.password
-rm_mydb = create_engine('mysql+pymysql://' + rm_user + ':' + rm_password +  '@' + rm_host + ':' + str(rm_port) + '/' + rm_dbname, echo=False) 
+import streamlit as st
 
 def prepare_space_default(article_nos: dict, default_rows: pd.DataFrame):
     default_rows['empty_space'] = default_rows['single_quantity_max'] - default_rows['quantity_single']
@@ -58,8 +49,6 @@ def sort_section(section: str):
     result[section] = 0
     return result
 
-
-
 def fill_L12(L12_places: pd.DataFrame, L0_section: str, article_instance: Article):
     section_sorted = sort_section(L0_section)
     L12_places['sort_section'] = L12_places['section'].apply(lambda x: section_sorted[x])    
@@ -88,5 +77,28 @@ def fill_CEZ(CEZ: pd.DataFrame, article_instance: Article):
 
 
 if __name__ == "__main__":
-    pass
-    
+    def create_article_instance(inbound_rows: pd.DataFrame):
+        result = {}
+        for index, inbound_row in inbound_rows.iterrows():
+            result[f"{inbound_row['article_no']}"] = Article(
+                article_no= inbound_row['article_no'],
+                status= inbound_row['status'],
+                sum_quantity= inbound_row['sum_quantity'],
+                qnt_box= inbound_row['qnt_box'],
+                full_qty= inbound_row['full_quantity'],
+                individual_pieces= inbound_row['individual_pieces'],
+                Full_pal_qty= inbound_row['Full_qty'],
+                Half_pal_qty= inbound_row['Half_qty'],
+                Quarter_pal_qty= inbound_row['Quarter_qty'],
+                default_id = inbound_row['default_id']
+            )
+        return result
+
+    from pathlib import Path
+    CURRENT_DIR = Path.cwd()
+    DATA_SOURCE = CURRENT_DIR / 'assets' / 'data_source'
+    WHS = pd.read_csv(DATA_SOURCE/'Warehouse_StorageUnit_DUS.csv')
+    L0_default = WHS[(WHS['default_article_no']>0) & (~WHS['default_article_no'].isna())]
+    inbound_pending = pd.read_csv(DATA_SOURCE/'po_delivery_static.csv')
+    article_instances = create_article_instance(inbound_rows= inbound_pending)
+    L0_default = prepare_space_default(article_nos= article_instances, default_rows= L0_default)

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 class Article:
     article_no: int
     sum_quantity: int
-    status: str
     qnt_box: int
     full_qty: int
     individual_pieces: int
