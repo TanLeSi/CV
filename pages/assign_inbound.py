@@ -18,7 +18,7 @@ def get_WHS():
 
 
 
-st.markdown('<h1 style="text-align:center">Assign Inbound</h1>', unsafe_allow_html= True)
+st.markdown('<p style="text-align:center;font-size:40px;font-weight: bold">Assign Inbound</p>', unsafe_allow_html= True)
 
 with open(CSS_FOLDER/'main.css') as css_file:
     st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
