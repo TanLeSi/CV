@@ -94,11 +94,11 @@ def get_stock_overview():
 
 def handle_operator(operator: str, MOI):
     result = {
-        "greater than": f" > {MOI}",
-        "less than": f" < {MOI}",
+        "greater than": f" > {MOI} && {MOI} <",
+        "less than": f" < {MOI} && {MOI} >",
     }
     if type(MOI) == list:
-        result['between'] = f" >= {MOI[0]} && {MOI[1]} >="
+        result['between'] = f" >= {MOI[0]} && {MOI[1]} >= "
     return result[operator]
 
 def prepare_data(df: pd.DataFrame, df_MOI: pd.DataFrame):
@@ -156,7 +156,7 @@ def create_stacked_AgGrid(df, operator, MOI_threshold):
                         "cellStyle": JsCode("""
                                         function(params) {
                                             console.log(params);
-                                            if (params.value""" + handle_operator(operator, MOI_threshold) + """params.value) {
+                                            if (params.value""" + handle_operator(operator, MOI_threshold) + """ params.value) {
                                                 return {
                                                     'color': 'white',
                                                     'backgroundColor': 'red'
@@ -228,8 +228,8 @@ if view_MOI:
         options= ('greater than', 'less than', 'between')
     )
     if overview_operator == 'between':
-        MOI_under = st.text_input('Please type in MOI under threshold',value= 1000)
-        MOI_upper = st.text_input('Please type in MOI upper threshold', value= 1000)
+        MOI_under = st.text_input('Please type in MOI under threshold',value= 5)
+        MOI_upper = st.text_input('Please type in MOI upper threshold', value= 10)
         MOI_input = [int(MOI_under), int(MOI_upper)]
         stock_overview_MOI = stock_overview[(stock_overview.MOI>=MOI_input[0]) & (stock_overview.MOI<=MOI_input[1]) ]
     else:
