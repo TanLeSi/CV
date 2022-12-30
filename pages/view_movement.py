@@ -6,6 +6,8 @@ from utils import create_AgGrid
 from functions.inbound import inbound
 from functions.inbound.article import Article
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode, GridUpdateMode
+import plotly.express as px
+
 
 CURRENT_DIR = Path.cwd()
 IMAGE_FOLDER = CURRENT_DIR / 'assets' /'images'
@@ -84,7 +86,6 @@ def mod_stock(stock_planner: pd.DataFrame):
     stock_planner['inventory_quantity'] = stock_planner['inventory_quantity'].astype(int)
     stock_planner['MOI'] = stock_planner['MOI'].astype(float)
     stock_planner['selling_price'] = stock_planner['selling_price'].round(2)
-    stock_planner['inventory_value'] = stock_planner['inventory_value'].round(2)
     return stock_planner
 
 @st.cache
@@ -242,8 +243,13 @@ if view_MOI:
 
     st.write("Choose an article to view it across all markets")
     stock_overview_group = prepare_data(df= stock_overview, df_MOI= stock_overview_MOI)
-    df_return, selected_row_std = create_stacked_AgGrid(stock_overview_group,operator= overview_operator ,MOI_threshold=MOI_input)
-    
+    df_return, selected_row = create_stacked_AgGrid(stock_overview_group,operator= overview_operator ,MOI_threshold=MOI_input)
+    selected_df = pd.json_normalize(selected_row[0]['pivot_data'])
+    fig = px.bar(
+        x= selected_df['country'],
+        y= selected_df['4_weeks_sales']
+    )
+    st.plotly_chart(fig, use_container_width= True)
 
 
 #     st.download_button(
