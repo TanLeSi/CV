@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-import base64, json, math
+import json, math
 from pathlib import Path
 from utils import create_AgGrid
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode, GridUpdateMode, ColumnsAutoSizeMode
-import plotly.express as px
+from st_aggrid import AgGrid, JsCode, GridUpdateMode, ColumnsAutoSizeMode
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
