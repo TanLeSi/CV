@@ -1,13 +1,10 @@
 import streamlit as st
 import pandas as pd
-import base64, json, math
 from pathlib import Path
 from utils import create_AgGrid
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode, GridUpdateMode, ColumnsAutoSizeMode
-import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
+from st_aggrid import AgGrid, GridUpdateMode, ColumnsAutoSizeMode
 import time
+from functions.outbound.outbound import main as assign_main
 
 CURRENT_DIR = Path.cwd()
 IMAGE_FOLDER = CURRENT_DIR / 'assets' /'images'
@@ -73,15 +70,15 @@ def create_checkbox(labels: list, buttons_on_1_row: int):
     return check_box_archiv
 
 def get_selected_button(checkboxes: dict):
-    selected_checkboxes = [int(key) for key, value in checkboxes.items() if value == True]
-    selected_checkboxes = outbound[outbound['Document_Number'].isin(selected_checkboxes)].index.values
+    selected_doc_nos = [int(key) for key, value in checkboxes.items() if value == True]
+    selected_checkboxes = outbound[outbound['Document_Number'].isin(selected_doc_nos)].index.values
     selected_checkboxes = list(map(int,selected_checkboxes))
     time.sleep(1)
-    return selected_checkboxes
+    return selected_checkboxes, selected_doc_nos
 
 outbound = pd.read_csv(DATA_SOURCE / "Warehouse_outbound_DUS_hist.csv").sort_values("Document_Number").reset_index(drop= True)
-checkboxes = create_checkbox(labels= outbound[outbound['loading_status']=="Awaiting confirm"].Document_Number.unique(), buttons_on_1_row= 6)
-selected_checkboxes = get_selected_button(checkboxes)
+checkboxes = create_checkbox(labels= outbound[outbound['loading_status']=="Pending"].Document_Number.unique(), buttons_on_1_row= 6)
+selected_checkboxes, selected_doc_nos = get_selected_button(checkboxes)
 
 gridOptions = {
         # enable Master / Detail
@@ -131,5 +128,8 @@ sel_row = grid_table['selected_rows']
 assign_side, confirm_side = st.columns(2)
 with assign_side:
     assign_button = st.button("Book selected shipments")
+if assign_button:
+    assign_main(selected_doc_nos)
+
 with confirm_side:
     confirm_button = st.button("Confirm booked shipments")

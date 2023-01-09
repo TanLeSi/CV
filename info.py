@@ -12,6 +12,7 @@ Bachelor student with experience of data analysing, searching for data-driven ba
 EMAIL_ADDRESS = "tan.lesi@study.hs-duesseldorf.de"
 DATE_OF_BIRTH = "31 May 1997"
 LOCATION = "Essen, Germany"
+LINKEDIN = "https://www.linkedin.com/in/tan-le-si-558a06212/"
 st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout= 'wide')
 
 CURRENT_DIR = Path.cwd()
@@ -38,6 +39,7 @@ with img_col:
     st.write("📅", DATE_OF_BIRTH)
     st.write("📍", LOCATION)
     st.write("📧", EMAIL_ADDRESS)
+    st.write(f"""🔗 <a href={LINKEDIN}>LinkedIn</a>""", unsafe_allow_html= True)
 with info_col:
     st.write("# About Me")
     st.markdown("""
@@ -49,6 +51,17 @@ with info_col:
         </ul>
         </div>
     """, unsafe_allow_html= True)
+    with open(f"{CURRENT_DIR/'assets'/'Lebenslauf.pdf'}", 'rb') as f:
+        data = f.read()
+        bin_str = base64.b64encode(data).decode()
+    st.markdown("<br>",unsafe_allow_html=True)
+    st.write(f"""
+        <div style="text-align:center;">
+        <a href="data:application/octet-stream;base64,{bin_str}" download="Lebenslauf_Tan_Le.pdf">
+            <button class="downloadButton" type="button">Download my CV here</button>
+        </a></div>
+    """, unsafe_allow_html= True)
+
 st.markdown("<hr>",unsafe_allow_html=True)
 # --- Education ---
 st.write('\n')
