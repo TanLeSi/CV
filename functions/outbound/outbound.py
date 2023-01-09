@@ -1,7 +1,7 @@
-from functions.outbound.sap import Sap
-from functions.outbound.article import Article
-# from sap import Sap
-# from article import Article
+# from functions.outbound.sap import Sap
+# from functions.outbound.article import Article
+from sap import Sap
+from article import Article
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np

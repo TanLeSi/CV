@@ -5,6 +5,7 @@ from utils import create_AgGrid
 from st_aggrid import AgGrid, GridUpdateMode, ColumnsAutoSizeMode
 import time
 from functions.outbound.outbound import main as assign_main
+from functions.outbound.confirm import main as confirm_main
 
 CURRENT_DIR = Path.cwd()
 IMAGE_FOLDER = CURRENT_DIR / 'assets' /'images'
@@ -133,3 +134,5 @@ if assign_button:
 
 with confirm_side:
     confirm_button = st.button("Confirm booked shipments")
+if confirm_button:
+    confirm_main()
