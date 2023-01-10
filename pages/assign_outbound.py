@@ -77,9 +77,22 @@ def get_selected_button(checkboxes: dict):
     time.sleep(1)
     return selected_checkboxes, selected_doc_nos
 
+def reset_data(df: pd.DataFrame):
+    df = df.assign(
+        loading_status ='Pending',
+        storage_unit ='',
+        WHS_Code ='',
+    ).drop(['article_no','carton_cbm', 'qnt_box'], axis= 1)
+    return df
+
 outbound = pd.read_csv(DATA_SOURCE / "Warehouse_outbound_DUS_hist.csv").sort_values("Document_Number").reset_index(drop= True)
 checkboxes = create_checkbox(labels= outbound[outbound['loading_status']=="Pending"].Document_Number.unique(), buttons_on_1_row= 6)
 selected_checkboxes, selected_doc_nos = get_selected_button(checkboxes)
+
+if 'selected_checkboxes' not in st.session_state:
+    st.session_state['selected_checkboxes'] = selected_checkboxes
+st.session_state['selected_checkboxes'] = selected_checkboxes
+st.write(st.session_state.selected_checkboxes)
 
 gridOptions = {
         # enable Master / Detail
@@ -120,13 +133,16 @@ grid_table = AgGrid(
     height=500,
     custom_css= custom_css,
     allow_unsafe_jscode=True,
-    update_mode=GridUpdateMode.SELECTION_CHANGED,
-    columns_auto_size_mode= ColumnsAutoSizeMode.FIT_CONTENTS
+    reload_data= True,
+    update_on=['cellValueChanged'],
+    columns_auto_size_mode= ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
+    key= 'test'
 )
 
 sel_row = grid_table['selected_rows']
 
-assign_side, confirm_side = st.columns(2)
+assign_side, confirm_side, reset_side = st.columns(3)
+
 with assign_side:
     assign_button = st.button("Book selected shipments")
 if assign_button:
@@ -136,3 +152,10 @@ with confirm_side:
     confirm_button = st.button("Confirm booked shipments")
 if confirm_button:
     confirm_main()
+
+with reset_side:
+    reset_button = st.button("Reset data")
+if reset_button:
+    outbound = reset_data(outbound)
+    outbound.to_csv(DATA_SOURCE / 'Warehouse_outbound_DUS_hist.csv', index= False)
+    st.experimental_rerun()

@@ -1,7 +1,7 @@
-# from functions.outbound.sap import Sap
-# from functions.outbound.article import Article
-from sap import Sap
-from article import Article
+from functions.outbound.sap import Sap
+from functions.outbound.article import Article
+# from sap import Sap
+# from article import Article
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
@@ -16,6 +16,9 @@ DATA_SOURCE = CURRENT_DIR / 'assets' / "data_source"
 
 WHS = pd.read_csv(DATA_SOURCE / "Warehouse_StorageUnit_DUS.csv")
 SAP_total = pd.read_csv(DATA_SOURCE / "Warehouse_outbound_DUS_hist.csv")
+PDB = pd.read_csv(DATA_SOURCE / "product_database.csv")
+SAP_total = SAP_total.merge(right= PDB, how= 'left', left_on='ItemCode', right_on= 'article_no')
+
 
 def main(doc_nos: list):
     SAP = SAP_total[SAP_total['Document_Number'].isin(doc_nos)]
@@ -63,7 +66,7 @@ def main(doc_nos: list):
                 SAP_object.handle_mix(article= current_article, quantity= SAP.loc[index, 'Qty_temp'], index_SAP= index, SAP= SAP)
                 # if L12 runs out then take rest from L0, the rest of the full boxes should be enough in L0 cause check_0_inv already checked           
                 if SAP.loc[index, 'Qty_temp'] > 0:
-                    SAP_object.check_pure_L0(article= current_article, WHS= current_article.WHS)
+                    SAP_object.check_pure_L0(article= current_article)
                     #### temporary fix ####
                     if current_article.check_sufficient_L0(quantity= SAP.loc[index, 'Qty_temp']):
                     ## followings are backup##
@@ -73,15 +76,15 @@ def main(doc_nos: list):
                         SAP.loc[index, 'loading_status'] = 'Not enough INV 101'
         # print(row['id'])
 
-    for key, value in article_list.items():
-        assert isinstance(value, Article)
-        if 'Not' in SAP.loc[SAP['ItemCode'] == value.article_no, 'loading_status'].unique()[0]:
-            continue
-        least_moved_quantity, switch_pos = value.get_movement(WHS= WHS)
-        if len(switch_pos) > 0:
-            value.replace_movement(SAP= SAP, switch_position= switch_pos)
-        if len(least_moved_quantity) > 0:
-            value.replace_quantity(least_moved_quantity= least_moved_quantity)
+    # for key, value in article_list.items():
+    #     assert isinstance(value, Article)
+    #     if 'Not' in SAP.loc[SAP['ItemCode'] == value.article_no, 'loading_status'].unique()[0]:
+    #         continue
+    #     least_moved_quantity, switch_pos = value.get_movement(WHS= WHS)
+    #     if len(switch_pos) > 0:
+    #         value.replace_movement(SAP= SAP, switch_position= switch_pos)
+    #     if len(least_moved_quantity) > 0:
+    #         value.replace_quantity(least_moved_quantity= least_moved_quantity)
 
     article_object_file = open(CURRENT_DIR / "article_objects.pickle","wb")
     pickle.dump(article_list, article_object_file)
@@ -90,7 +93,7 @@ def main(doc_nos: list):
     SAP = pd.concat([SAP,SAP_inverse])
     SAP = SAP.drop(columns=['Qty_temp'])
     SAP = SAP.reset_index(drop=True)
-    SAP.to_csv(DATA_SOURCE /"Warehouse_outbound_DUS_pending.csv", index= False)
+    SAP.to_csv(DATA_SOURCE /"Warehouse_outbound_DUS_hist.csv", index= False)
     print('finish')
 
 # main([2281858])

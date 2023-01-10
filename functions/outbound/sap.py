@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-# from functions.outbound.article import Article
-from article import Article
+from functions.outbound.article import Article
+# from article import Article
 
 class Sap:
     def __init__(self, SAP: pd.DataFrame):

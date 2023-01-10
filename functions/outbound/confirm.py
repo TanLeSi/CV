@@ -2,10 +2,10 @@ import sys, datetime, pickle
 import pandas as pd
 from string import ascii_uppercase
 from pathlib import Path
-# from functions.outbound.sap import Sap
-# from functions.outbound.article import Article
-from sap import Sap
-from article import Article
+from functions.outbound.sap import Sap
+from functions.outbound.article import Article
+# from sap import Sap
+# from article import Article
 
 CURRENT_DIR = Path.cwd()
 DATA_SOURCE = CURRENT_DIR / 'assets' / "data_source"
@@ -15,6 +15,7 @@ today = pd.Timestamp.today()
 
 outbound_temp = pd.read_csv(DATA_SOURCE / 'Warehouse_outbound_DUS_pending.csv')
 WHS = pd.read_csv(DATA_SOURCE / 'Warehouse_StorageUnit_DUS.csv')
+PDB = pd.read_csv(DATA_SOURCE / 'product_database.csv')
 
 def syn_WHS(article: Article, WHS_global: pd.DataFrame):
     for index_WHS, row_WHS in article.WHS.iterrows():
@@ -43,7 +44,7 @@ def main():
     WHS_diff['Qty_diff'] = WHS_diff['quantity_single_x']-WHS_diff['quantity_single_y']
     WHS_diff['WHS_Code'] = WHS_diff['section'].astype(str)  + WHS_diff['number'].astype(str) + '-' + WHS_diff['level'].astype(str).str.replace('l','L')+ '->' + WHS_diff['side'].astype(str).str.replace('None','FULL')
 
-    WHS_diff = pd.merge(WHS_diff,outbound_temp[['ItemCode','carton_cbm', 'qnt_box']], how='left', left_on= 'article_no', right_on='ItemCode')
+    WHS_diff = pd.merge(WHS_diff,PDB[['article_no','carton_cbm', 'qnt_box']], how='left', left_on= 'article_no', right_on='article_no')
     WHS_diff = WHS_diff[['article_no','Qty_diff','WHS_Code','section','number','level','side','carton_cbm','qnt_box','quantity_single_x','single_quantity_max']]
     WHS_diff = WHS_diff.rename(columns ={'carton_cbm':'CBM', 'quantity_single_x':'quantity_single'})
     WHS_diff = WHS_diff.sort_values(by=['section','level','side'])
