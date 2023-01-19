@@ -35,50 +35,6 @@ with st.expander("Function description", expanded= True):
 
     """, unsafe_allow_html= True)
 
-# def mod_stock(stock_planner: pd.DataFrame):
-#     stock_planner['inventory_quantity'] = stock_planner['inventory_quantity'].astype(int)
-#     stock_planner['MOI'] = stock_planner['MOI'].astype(float)
-#     stock_planner['selling_price'] = stock_planner['selling_price'].round(2)
-#     stock_planner['inventory_value'] = stock_planner['inventory_value'].round(2)
-#     return stock_planner
-
-# def get_stock_planner(country_code: str):
-#     select_query = f"""
-#         select stock.sku, stock.article_no, stock.selling_price, stock.inv_amz as inventory_quantity, stock.selling_price*stock.inv_amz as inventory_value, stock.w4 +stock.w3 +stock.w2 +stock.w1 as 4_weeks_sales,
-#             PDB.status, PDB.factory,  stock.inv_amz_2w12 as MOI, stock.PO, stock.ETA, '{country_code}' as country
-#         from stock_planner_temp_{country_code} stock
-#         left join product_database PDB 
-#         on PDB.article_no = stock.article_no
-#         where 1
-#     """
-#     stock_planner = pd.read_sql_query(select_query, con= rm_mydb)
-#     stock_planner = mod_stock(stock_planner= stock_planner)
-#     return stock_planner
-
-# def create_download_button(df: pd.DataFrame, download_header: str, file_name: str, button_key= 0, selection_mode= False):
-#     df_return, selected_row_std = create_AgGrid(df, button_key= button_key, selection_mode= selection_mode)
-#     st.download_button(
-#             label= f'{download_header}',
-#             data = pd.DataFrame.from_dict(df_return['data']).to_csv(index= False).encode('utf-8'),
-#             file_name= f'{file_name}.csv',
-#             mime='csv'
-#         )
-        
-# @st.cache(hash_funcs={sqlalchemy.engine.base.Engine: id})
-# def get_info_article(article_no: int):
-#     stock_all = pd.DataFrame()
-#     for each_country in COUNTRY_LIST:
-#         select_query = f"""
-#             select stock.sku, stock.article_no, stock.selling_price, stock.inv_amz as inventory_quantity, stock.selling_price*stock.inv_amz as inventory_value, stock.w4 +stock.w3 +stock.w2 +stock.w1 as 4_weeks_sales,
-#                 PDB.status, PDB.factory,  stock.inv_amz_2w12 as MOI, stock.PO, stock.ETA, '{each_country}' as country
-#             from stock_planner_temp_{each_country} stock
-#             left join product_database PDB 
-#             on PDB.article_no = stock.article_no
-#             where stock.article_no = {article_no}
-#         """
-#         each_stock = pd.read_sql_query(select_query, con= rm_mydb)
-#         stock_all = pd.concat([stock_all,each_stock], ignore_index= True)
-#     return mod_stock(stock_all)
 
 def mod_stock(stock_planner: pd.DataFrame):
     stock_planner['inventory_quantity'] = stock_planner['inventory_quantity'].astype(int)
@@ -282,71 +238,53 @@ def create_stacked_AgGrid_markets(df: pd.DataFrame, market: str):
     return grid_table, sel_row
 
 def create_subplot(df: pd.DataFrame, col: int):
-        rows = math.ceil(df.shape[0] / col) + 1
-        titles = ['All markets']
-        titles.extend(df['country'].unique())
-        fig_subplot = make_subplots(rows= rows, cols= col, subplot_titles= titles, vertical_spacing= round(1/(rows-1),1)/3)
+    rows = math.ceil(df.shape[0] / col) + 1
+    titles = ['All markets']
+    titles.extend(df['country'].unique())
+    fig_subplot = make_subplots(rows= rows, cols= col, subplot_titles= titles, vertical_spacing= round(1/(rows-1),1)/3)
+    fig_subplot.add_trace(
+        go.Bar(
+            x= df['country'],
+            y= df['4_weeks_sales'],
+            name= "all markets",
+            showlegend= False,
+            text= list(df['4_weeks_sales']),
+            textposition= "outside",
+        )
+    )
+    fig_subplot.layout[f"xaxis"].update(title="4 weeks sales by markets")
+    fig_subplot.layout[f"yaxis"].update(range=[0, max(df['4_weeks_sales']) + 20])
+    row_counter = 1
+    for index, row in df.iterrows():
+        if (index + 1) % col == 0:
+            row_counter += 1
+        col_counter =  1 + (index + 1) % col  
         fig_subplot.add_trace(
-            go.Bar(
-                x= df['country'],
-                y= df['4_weeks_sales'],
-                name= "all markets",
-                showlegend= False,
-                text= list(df['4_weeks_sales']),
-                textposition= "outside",
-            )
-        )
-        fig_subplot.layout[f"xaxis"].update(title="4 weeks sales by markets")
-        fig_subplot.layout[f"yaxis"].update(range=[0, max(df['4_weeks_sales']) + 20])
-        row_counter = 1
-        for index, row in df.iterrows():
-            if (index + 1) % 3 == 0:
-                row_counter += 1
-            col_counter =  1 + (index + 1) % 3  
-            fig_subplot.add_trace(
-                go.Scatter(
-                    x= ['w4','w3','w2','w1'],
-                    y=row[['w4','w3','w2','w1']],
-                    name= row.country,
-                    mode="lines+markers+text",
-                    text= list(row[['w4','w3','w2','w1']]),
-                    textposition= "top center",
-                    showlegend= False
-                ),
-                row= row_counter,
-                col= col_counter  
-            )
-            fig_subplot.layout[f"xaxis{index+2}"].update(title="Last n weeks sales")
-            fig_subplot.layout[f"yaxis{index+1}"].update(title="Pieces")
-        fig_subplot.update_layout(
-            height= rows * 400,
-            font= dict(
-                size=14,
-                color='yellow'
+            go.Scatter(
+                x= ['w4','w3','w2','w1'],
+                y=row[['w4','w3','w2','w1']],
+                name= row.country,
+                mode="lines+markers+text",
+                text= list(row[['w4','w3','w2','w1']]),
+                textposition= "top center",
+                showlegend= False
             ),
+            row= row_counter,
+            col= col_counter  
         )
-        fig_subplot.update_xaxes(showgrid= False)
-        fig_subplot.update_yaxes(showgrid= False)
-        return fig_subplot
-
-
-# def test_int_input(input):
-#     try:
-#         input = int(input)
-#     except:
-#         st.warning('MOI must be a number')
-#         st.stop()
-
-# def get_MOI_article(article_nos: str):
-#     try:
-#         article_nos_str = article_nos.split(',')
-#     except:
-#         article_nos_str = int(article_nos)
-#     MOI_article_sum = pd.DataFrame()
-#     for each_article in article_nos_str:
-#         article_stock = get_info_article(int(each_article))
-#         MOI_article_sum = pd.concat([MOI_article_sum, article_stock], ignore_index= True)
-#     return MOI_article_sum
+        fig_subplot.layout[f"xaxis{index+2}"].update(title="Last n weeks sales")
+        fig_subplot.layout[f"yaxis{index+2}"].update(title="Pieces", range= [min(row[['w4','w3','w2','w1']])-1, max(row[['w4','w3','w2','w1']])+2])
+        fig_subplot.layout[f"yaxis{index+1}"].update(title="Pieces")
+    fig_subplot.update_layout(
+        height= rows * 400,
+        font= dict(
+            size=14,
+            color='yellow'
+        ),
+    )
+    fig_subplot.update_xaxes(showgrid= False)
+    fig_subplot.update_yaxes(showgrid= False)
+    return fig_subplot
 
 
 st.header('Stock overview')
@@ -392,27 +330,24 @@ if view_mode == "View based on MOI":
 if view_mode == VIEW_OPTION[1]:
     st.info(f"""
         Enter market to view MOI of all articles in that market.""")
-    view_type = st.radio(
-            label= 'Choose view type:',
-            options= ('by market', 'by article_no')
-        )
 
-    if view_type == 'by market':
-        st.write(f"available markets: {', '.join(COUNTRY_LIST)} or type ALL to view all markets")
-        country_code = st.text_input("Please type market in", 'DE')
-        if country_code.lower() == 'all':
-            st.download_button(
-                label= f'Download all markets',
-                data = stock_overview.to_csv(index= False).encode('utf-8'),
-                file_name= f'all_markets.csv',
-                mime='csv'
-            )
-            st.stop()
-        if country_code not in COUNTRY_LIST:
-            st.warning(f'{country_code} is not acceptable as a market')
-            st.stop()
-        stock_overview = prepare_data_market(stock_overview, market= country_code)
-        df_return, selected_row = create_stacked_AgGrid_markets(stock_overview, market=country_code)
+    st.write(f"available markets: {', '.join(COUNTRY_LIST)} or type ALL to view all markets")
+    country_code = st.text_input("Please type market in", 'DE')
+    if country_code.lower() == 'all':
+        st.download_button(
+            label= f'Download all markets',
+            data = stock_overview.to_csv(index= False).encode('utf-8'),
+            file_name= f'all_markets.csv',
+            mime='csv'
+        )
+        st.stop()
+    if country_code not in COUNTRY_LIST:
+        st.warning(f'{country_code} is not acceptable as a market')
+        st.stop()
+    stock_overview = prepare_data_market(stock_overview, market= country_code)
+    df_return, selected_row = create_stacked_AgGrid_markets(stock_overview, market=country_code)
+    selected_df = pd.json_normalize(selected_row[0]['pivot_data'])
+    st.plotly_chart(create_subplot(df= selected_df, col= 3), use_container_width= True)
 
 if view_mode == VIEW_OPTION[2]:
     st.info(f"""
@@ -424,8 +359,29 @@ if view_mode == VIEW_OPTION[2]:
     except:
         st.error("Article_no must be a number!")
         st.stop()
-    a, b = create_AgGrid(df= stock_overview[stock_overview.article_no.isin(article_no_input)].sort_values('article_no'), selection_mode= False)
-#         create_download_button(df= get_MOI_article(article_nos=article_no_input),
-#                             download_header= f"Download {article_no_input} across all markets",
-#                             file_name= f"{article_no_input} across all markets",
-#                             button_key= "individual_articles")
+    # a, b = create_AgGrid(df= stock_overview[stock_overview.article_no.isin(article_no_input)].sort_values('article_no'), selection_mode= False)
+
+    temp = stock_overview[stock_overview.article_no.isin(article_no_input)]
+
+    for value in article_no_input:
+        fig = go.Figure()
+        for index, row in temp[temp.article_no == value].iterrows():
+            fig.add_trace(
+                go.Scatter(
+                    x= ['w4','w3','w2','w1'],
+                    y= row[['w4','w3','w2','w1']],
+                    name= row['country'],
+                    showlegend= True,
+                ))
+            
+        fig.update_xaxes(showgrid= True, gridcolor= "#43bde6")
+        fig.update_yaxes(title= 'Pieces', showgrid= True, gridcolor= "#43bde6")
+        fig.update_layout(
+                height=  500,
+                font= dict(
+                    size=14,
+                    color='yellow'
+                ),
+                title= f"Last n weeks sales for {value} across all markets"
+            )
+        st.plotly_chart(fig, use_container_width= True)
