@@ -28,7 +28,7 @@ country_sales = get_sales_record()
 
 
 
-selected_product = st.text_input('**Enter an article number**',placeholder= 11525, key='product_input')
+selected_product = st.text_input('**Enter an article number**',placeholder= "e.g. 11525, 10844, 11167, ...", key='product_input')
 @st.experimental_memo
 def display_chart(article_no: int):
     for each_country in COUNTRY_LIST:

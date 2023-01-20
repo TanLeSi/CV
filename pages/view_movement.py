@@ -6,6 +6,7 @@ from utils import create_AgGrid
 from st_aggrid import AgGrid, JsCode, GridUpdateMode, ColumnsAutoSizeMode
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import plotly.express as px
 
 CURRENT_DIR = Path.cwd()
 IMAGE_FOLDER = CURRENT_DIR / 'assets' /'images'
@@ -26,8 +27,10 @@ with st.expander("Function description", expanded= True):
         There are several markets across the world, for example: the USA, Japan, Germany, etc. 
 
         Bacause of the diverse variety of the products, large quantities to be sold and shipped to different countries, there is the need for an easy way to 
-        visualize and keep track of the movement of all products in order to later on make a correspond decision on restocking more good selling prodcuts 
+        visualize and keep track of the movement of all products in order to later on make a correspond decision on restocking more good selling products 
         in the warehouse or removing slow-selling products from the warehouse/market. 
+
+        The interactive table below shows in which country is a product being sold, and in how many of them does it's MOI meet the selected requirement.
         
         Because of security reasons, all of the data used for this demonstration are randomly self-created and stored in a simple csv file.
         In real case, the data should be gathered from a database using SQL.
@@ -42,6 +45,7 @@ def mod_stock(stock_planner: pd.DataFrame):
     stock_planner['selling_price'] = stock_planner['selling_price'].round(2)
     return stock_planner
 
+@st.experimental_memo
 def get_stock_overview():
     result = pd.read_csv(DATA_SOURCE/'AMZ_INV_all_markets.csv')
     return mod_stock(result)
@@ -96,8 +100,8 @@ def create_stacked_AgGrid_MOI(df, operator, MOI_threshold):
                 "cellRenderer": "agGroupCellRenderer",
                 "checkboxSelection": True,
             },
-            {"field": "available_in", "valueFormatter": "x.toLocaleString() + ' countries'"},
-            {"field": "count_MOI", "valueFormatter": "x.toLocaleString() + ' countries'"},
+            {"field": "available_in", "valueFormatter": "x.toLocaleString() + ' market(s)'"},
+            {"field": "count_MOI", "valueFormatter": "x.toLocaleString() + ' market(s)'"},
         ],
         "defaultColDef": {
             "filter": True,
@@ -113,7 +117,7 @@ def create_stacked_AgGrid_MOI(df, operator, MOI_threshold):
                     {"field": "selling_price"},
                     {"field": "inventory_quantity"},
                     {"field": "inventory_value"},
-                    {"field": "4_weeks_sales"},
+                    {"field": "_4_weeks_sales"},
                     {
                         "field": "MOI", 
                         "cellStyle": JsCode("""
@@ -182,7 +186,7 @@ def create_stacked_AgGrid_markets(df: pd.DataFrame, market: str):
             {"field": "w3"},
             {"field": "w2"},
             {"field": "w1"},
-            {"field": "4_weeks_sales"},
+            {"field": "_4_weeks_sales"},
             {"field": "MOI"},
             {"field": "country"},
         ],
@@ -203,7 +207,7 @@ def create_stacked_AgGrid_markets(df: pd.DataFrame, market: str):
                     {"field": "w3"},
                     {"field": "w2"},
                     {"field": "w1"},
-                    {"field": "4_weeks_sales"},
+                    {"field": "_4_weeks_sales"},
                     {"field": "country"},
                 ],
                 "defaultColDef": {
@@ -245,15 +249,15 @@ def create_subplot(df: pd.DataFrame, col: int):
     fig_subplot.add_trace(
         go.Bar(
             x= df['country'],
-            y= df['4_weeks_sales'],
+            y= df['_4_weeks_sales'],
             name= "all markets",
             showlegend= False,
-            text= list(df['4_weeks_sales']),
+            text= list(df['_4_weeks_sales']),
             textposition= "outside",
         )
     )
     fig_subplot.layout[f"xaxis"].update(title="4 weeks sales by markets")
-    fig_subplot.layout[f"yaxis"].update(range=[0, max(df['4_weeks_sales']) + 20])
+    fig_subplot.layout[f"yaxis"].update(range=[0, max(df['_4_weeks_sales']) + 20])
     row_counter = 1
     for index, row in df.iterrows():
         if (index + 1) % col == 0:
@@ -286,12 +290,18 @@ def create_subplot(df: pd.DataFrame, col: int):
     fig_subplot.update_yaxes(showgrid= False)
     return fig_subplot
 
+def create_bar_chart(df: pd.DataFrame):
+    pie_df = pd.concat([df, pd.DataFrame([{'country': 'in stock', 'inventory_quantity': df['quantity_in_stock'].values[0]}])], ignore_index= True)
+
+    pie_chart = px.pie(pie_df, values= 'inventory_quantity', names= 'country')
+    pie_chart.update_layout(font=dict(size=16))
+    return pie_chart
 
 st.header('Stock overview')
 stock_overview = get_stock_overview()
 
 view_mode = st.sidebar.radio(label="Choose view mode", options= VIEW_OPTION)
-if view_mode == "View based on MOI":
+if view_mode == VIEW_OPTION[0]:
     with st.expander('Explanation for view based on MOI'):
         st.markdown(f"""
             Stock overview shows articles that have **MOI** greater/less or between given **MOI**. <br>
@@ -325,6 +335,8 @@ if view_mode == "View based on MOI":
             file_name= f'MOI_{overview_operator}_{MOI_input}.csv',
             mime='csv'
         )
+    st.markdown(f'<p style="text-align:center;font-size:20px;font-weight: bold">Percentage of inventory for {selected_df.article_no.values[0]}</p>', unsafe_allow_html= True)
+    st.plotly_chart(create_bar_chart(selected_df), use_container_width= True)
     st.plotly_chart(create_subplot(df= selected_df, col= 3), use_container_width= True)
                             
 if view_mode == VIEW_OPTION[1]:
@@ -346,7 +358,14 @@ if view_mode == VIEW_OPTION[1]:
         st.stop()
     stock_overview = prepare_data_market(stock_overview, market= country_code)
     df_return, selected_row = create_stacked_AgGrid_markets(stock_overview, market=country_code)
-    selected_df = pd.json_normalize(selected_row[0]['pivot_data'])
+    if pd.json_normalize(selected_row[0]['pivot_data']).shape[0]:
+        selected_df = pd.json_normalize(selected_row[0]['pivot_data'])
+    else:
+        rm_key = ["_selectedRowNodeInfo", "pivot_data"]
+        [selected_row[0].pop(each, None) for each in rm_key]
+        selected_df = pd.DataFrame().from_dict(selected_row)
+    st.markdown(f'<p style="text-align:center;font-size:20px;font-weight: bold">"Percentage of inventory for {selected_df.article_no.values[0]}" </p>', unsafe_allow_html= True)
+    st.plotly_chart(create_bar_chart(selected_df), use_container_width=True)
     st.plotly_chart(create_subplot(df= selected_df, col= 3), use_container_width= True)
 
 if view_mode == VIEW_OPTION[2]:
@@ -382,6 +401,7 @@ if view_mode == VIEW_OPTION[2]:
                     size=14,
                     color='yellow'
                 ),
-                title= f"Last n weeks sales for {value} across all markets"
+                title= f"Last n weeks sales for {value} across all markets",
+                hovermode= "x unified"
             )
         st.plotly_chart(fig, use_container_width= True)
