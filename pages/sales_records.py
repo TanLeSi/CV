@@ -85,7 +85,7 @@ except:
     st.stop()
 
 sales_report = country_sales[country_sales['article_no'] == selected_product]
-selected_markets = st.sidebar.multiselect(label= "Choose marketto view", options= np.append('All',sales_report.country.unique()), default='All')
+selected_markets = st.sidebar.multiselect(label= "Choose market to view", options= np.append('All',sales_report.country.unique()), default='All')
 
 if st.session_state['product_input']:
     display_chart(df= sales_report, country_list= selected_markets)
