@@ -57,13 +57,14 @@ with st.expander("Function description", expanded= True):
 inbound_pending = pd.read_csv(DATA_SOURCE/'po_delivery_static.csv')
 WHS = get_WHS()
 
-
 with st.expander("Raw data"):
     st.markdown("### Inbound products", unsafe_allow_html= True)
     st.table(inbound_pending)
     st.markdown("### Warehouse positions", unsafe_allow_html= True)
-    df_return, selected_row = create_AgGrid(df=WHS, selection_mode= False)
-
+    rel_WHS_columns = ['id', 'section', 'number', 'level', 'side',
+                       'storage_unit_size_w','storage_unit_size_h','storage_unit_size_l',
+                       'article_no', 'default_article_no', 'single_quantity_max', 'size' ]
+    df_return, selected_row = create_AgGrid(df=WHS[rel_WHS_columns], selection_mode= False)
 calculate_button = st.button("Calculate inbound")
 if "calculate" not in st.session_state:
     st.session_state.calculate = False
