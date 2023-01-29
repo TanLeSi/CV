@@ -31,10 +31,10 @@ with open(CSS_FOLDER/'main.css') as css_file:
     st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
 
 
-img_col, info_col = st.columns([2,3])
+img_col, info_col = st.columns([2,2])
 
 with img_col:
-    st.image(Image.open(IMAGE_FOLDER/ 'Bewerbungsfoto.jpg'), width= 230)
+    st.image(Image.open(IMAGE_FOLDER/ 'Bewerbungsfoto.jpg'), width= 400)
     st.title(NAME)
     st.write("📅", DATE_OF_BIRTH)
     st.write("📍", LOCATION)
