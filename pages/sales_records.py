@@ -77,7 +77,29 @@ def display_chart(df: pd.DataFrame, country_list: list[str]):
 country_sales = get_sales_record()
 
 
-selected_product = st.text_input('**Enter an article number**',placeholder= "e.g. 11525, 10844, 11167, ...", key='product_input')
+with st.expander(f"Function description:", expanded= True):
+    st.markdown("""
+        <p>
+        This is a function for an ERP web application for an e-commerce seller. In this particular example, the seller have his products sold via Amazon Marketplace.
+        There are several markets across the world, for example: the USA, Japan, Germany, etc. 
+
+        Because of the diverse variety of the products, large quantities to be sold and shipped to different countries, there is the need for an easy way to 
+        visualize and keep track of the sales of all products in order to later on make a correspond decision on restocking more good selling products 
+        in the warehouse or removing slow-selling products from the warehouse/market. 
+
+        The interactive graphs below show inventory level, restocking time stamps, sales records and return quantity in the last 2 years
+        of a product in all markets, where it's being sold. 
+
+        With this graph, sales department should be able to trace back their selling strategies and restock plans. There could be 
+        a period of high demand but stock wasn't refilled soon enough or maybe a sudden return rate, which indicates certain flaws of the product
+        that led to customer's dissatisfaction.
+
+        Because of security reasons, all of the data used for this demonstration are randomly self-created and stored in a simple csv file.
+        In real case, the data should be gathered from a database using SQL.
+        </p>
+    """, unsafe_allow_html= True)
+
+selected_product = st.text_input('**Enter an article number**',placeholder= "e.g. 11525, 11354, 11167, ...", key='product_input')
 try:
     selected_product = int(selected_product)
 except:

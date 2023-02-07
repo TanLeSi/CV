@@ -26,7 +26,7 @@ with st.expander("Function description", expanded= True):
         This is a function for an ERP web application for an e-commerce seller. In this particular example, the seller have his products sold via Amazon Marketplace.
         There are several markets across the world, for example: the USA, Japan, Germany, etc. 
 
-        Bacause of the diverse variety of the products, large quantities to be sold and shipped to different countries, there is the need for an easy way to 
+        Because of the diverse variety of the products, large quantities to be sold and shipped to different countries, there is the need for an easy way to 
         visualize and keep track of the movement of all products in order to later on make a correspond decision on restocking more good selling products 
         in the warehouse or removing slow-selling products from the warehouse/market. 
 
