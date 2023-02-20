@@ -19,14 +19,14 @@ st.markdown('<p style="text-align:center;font-size:40px;font-weight: bold">Sales
 with open(CSS_FOLDER/'main.css') as css_file:
     st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
 
-@st.experimental_memo
+@st.cache_data
 def get_sales_record():
     # country_sales = {each_country: pd.read_excel(DATA_SOURCE / 'sales_records.xlsx', sheet_name=each_country) for each_country in COUNTRY_LIST}
     # return country_sales
     country_sales = pd.read_excel(DATA_SOURCE / 'sales_records.xlsx', sheet_name= None)
     return pd.concat(country_sales.values())
 
-@st.experimental_memo
+@st.cache_data
 def display_chart(df: pd.DataFrame, country_list: list[str]):
     if 'All' in country_list:
         country_list = COUNTRY_LIST

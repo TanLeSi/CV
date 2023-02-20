@@ -45,7 +45,7 @@ def mod_stock(stock_planner: pd.DataFrame):
     stock_planner['selling_price'] = stock_planner['selling_price'].round(2)
     return stock_planner
 
-@st.experimental_memo
+@st.cache_data
 def get_stock_overview():
     result = pd.read_csv(DATA_SOURCE/'AMZ_INV_all_markets.csv')
     return mod_stock(result)
@@ -362,10 +362,10 @@ if view_mode == VIEW_OPTION[1]:
         selected_df = pd.json_normalize(selected_row[0]['pivot_data'])
     else:
         rm_key = ["_selectedRowNodeInfo", "pivot_data"]
-        [selected_row[0].pop(each, None) for each in rm_key]
+        a = [selected_row[0].pop(each, None) for each in rm_key]
         selected_df = pd.DataFrame().from_dict(selected_row)
     st.markdown(f'<p style="text-align:center;font-size:20px;font-weight: bold">"Percentage of inventory for {selected_df.article_no.values[0]}" </p>', unsafe_allow_html= True)
-    st.plotly_chart(create_bar_chart(selected_df), use_container_width=True)
+    st.plotly_chart(create_bar_chart(selected_df), use_container_width=False)
     st.plotly_chart(create_subplot(df= selected_df, col= 3), use_container_width= True)
 
 if view_mode == VIEW_OPTION[2]:
