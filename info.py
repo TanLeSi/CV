@@ -45,7 +45,7 @@ with info_col:
     st.markdown("""
         <div>
         <ul class="listBig">
-            <p style="margin-bottom: 20px;"><li class= "listBig"> I'm a bachelor student from Hochschule Düsseldorf, searching for a data-driven bachelor thesis to complete my degree.</li></p>
+            <p style="margin-bottom: 20px;"><li class= "listBig"> I'm a bachelor student from Hochschule Düsseldorf, searching for a data-driven job to sharpen my skills</li></p>
             <p style="margin-bottom: 20px;"><li class= "listBig"> I'm enthusiastic about finding insights and patterns from large datasets, based on which strategical decisions will be made.</li></p>
             <li class= "listBig"> I have 15 months experience of utilizing Python and SQL for data analysing and visualising purposes.</li>
         </ul>
@@ -85,7 +85,7 @@ st.markdown("<hr>",unsafe_allow_html=True)
 st.write('\n')
 st.header("Work Experience")
 
-two_col_txt("##### Backend Developer/ Data Analyst", "##### 09/2021-now", ratio=[4,1])
+two_col_txt("##### Backend Developer/ Data Analyst", "##### 09/2021-04/2023", ratio=[4,1])
 st.write("🔗 [Perixx Ltd., Düsseldorf, Germany](https://www.linkedin.com/company/perixx-computer-gmbh/)")
 st.write("""
         - Functionality development for an internal ERP web application\n
@@ -96,11 +96,12 @@ st.write("""
 
 st.write("\n")
 st.write("\n")
-two_col_txt("##### Tutor for Scientific Computing", "##### 09/2022-now", ratio=[4,1])
-st.write("🔗 [Hochschule Düsseldorf, Germany](https://mv.hs-duesseldorf.de/)")
+two_col_txt("##### Working Student as Data Analyst", "##### 05/2023-now", ratio=[4,1])
+st.write("🔗 [G Data Cyberdefense Bochum, Germany](https://www.gdata.de/)")
 st.write("""
-        - Assisting students with familiarizing the usage of Matlab \n
-        - Applying Matlab to mechanical related numerical calculations\n
+        - Data collection, data processing, data preparation\n
+        - Ensuring accuracy and completeness of data\n
+        - Analysing and visualizing collected data \n
     """)
 
 st.markdown("<hr>",unsafe_allow_html=True)
